@@ -1,4 +1,4 @@
-const app = require("./app-core");
+const app = require("./index");
 
 const PORT = Number(process.env.PORT || 8000);
 

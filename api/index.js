@@ -1,1 +1,1 @@
-module.exports = require("../app-core");
+module.exports = require("../index");
