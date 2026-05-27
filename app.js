@@ -1,11 +1,11 @@
 require("dotenv").config();
 
 const cors = require("cors");
+const crypto = require("crypto");
 const express = require("express");
 const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
-const { v4: uuidv4 } = require("uuid");
 
 const { authenticateUser, createUser } = require("./authRepository");
 const { getPapersCollection, initDatabase } = require("./database");
@@ -50,7 +50,7 @@ app.use(express.json());
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
   filename: (_req, file, cb) => {
-    const docId = uuidv4();
+    const docId = crypto.randomUUID();
     cb(null, `${docId}${path.extname(file.originalname || ".pdf")}`);
   },
 });
