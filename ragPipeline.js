@@ -1,7 +1,16 @@
 const fs = require("fs");
-const { ChatGroq } = require("@langchain/groq");
 const { documentPath } = require("./storage");
 const LLM_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 6000);
+
+let ChatGroqClass = null;
+
+function getChatGroq() {
+  if (!ChatGroqClass) {
+    ({ ChatGroq: ChatGroqClass } = require("@langchain/groq"));
+  }
+
+  return ChatGroqClass;
+}
 
 function splitIntoChunks(text, chunkSize = 1000, overlap = 200) {
   const normalized = text.replace(/\s+/g, " ").trim();
@@ -341,6 +350,8 @@ function getLlm() {
   if (!process.env.GROQ_API_KEY) {
     return null;
   }
+
+  const ChatGroq = getChatGroq();
 
   return new ChatGroq({
     apiKey: process.env.GROQ_API_KEY,

@@ -1,8 +1,18 @@
 const fs = require("fs");
-const { PDFParse } = require("pdf-parse");
+
+let PDFParseClass = null;
+
+function getPdfParse() {
+  if (!PDFParseClass) {
+    ({ PDFParse: PDFParseClass } = require("pdf-parse"));
+  }
+
+  return PDFParseClass;
+}
 
 async function extractTextAndStats(filePath) {
   const buffer = fs.readFileSync(filePath);
+  const PDFParse = getPdfParse();
   const parser = new PDFParse({ data: buffer });
 
   try {
