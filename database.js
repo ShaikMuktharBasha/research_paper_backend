@@ -1,7 +1,14 @@
-const { MongoClient } = require("mongodb");
-
 let client;
 let papersCollection = null;
+let MongoClientClass = null;
+
+function getMongoClient() {
+  if (!MongoClientClass) {
+    ({ MongoClient: MongoClientClass } = require("mongodb"));
+  }
+
+  return MongoClientClass;
+}
 
 async function initDatabase() {
   const mongoUri = process.env.MONGODB_URI;
@@ -15,6 +22,7 @@ async function initDatabase() {
   }
 
   try {
+    const MongoClient = getMongoClient();
     client = new MongoClient(mongoUri, {
       serverSelectionTimeoutMS: 3000,
     });
