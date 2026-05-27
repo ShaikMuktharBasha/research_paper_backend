@@ -21,7 +21,6 @@ const { buildDashboardData, getPaperRecord, listStoredPapers } = require("./pape
 const { UPLOAD_DIR, ensureStorage } = require("./storage");
 
 const app = express();
-const PORT = Number(process.env.PORT || 8000);
 
 let databaseInitPromise = null;
 
@@ -264,18 +263,4 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ detail: error.message || "Internal server error" });
 });
 
-async function startServer() {
-  initializeApp();
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Node backend running on http://localhost:${PORT}`);
-  });
-}
-
 module.exports = app;
-
-if (require.main === module) {
-  startServer().catch((error) => {
-    console.error("Server failed to start:", error);
-    process.exit(1);
-  });
-}

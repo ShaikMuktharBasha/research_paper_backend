@@ -4,7 +4,7 @@
   "description": "Node.js backend for the AI Research Paper Simplifier",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node dev-server.js"
   },
   "keywords": [],
   "author": "",
