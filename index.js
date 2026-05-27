@@ -23,7 +23,22 @@ const { UPLOAD_DIR, ensureStorage } = require("./storage");
 const app = express();
 const PORT = Number(process.env.PORT || 8000);
 
-ensureStorage();
+let databaseInitPromise = null;
+
+function initializeApp() {
+  ensureStorage();
+
+  if (!databaseInitPromise) {
+    databaseInitPromise = initDatabase().catch((error) => {
+      console.warn("Database initialization failed, continuing without MongoDB.", error.message);
+      return null;
+    });
+  }
+
+  return databaseInitPromise;
+}
+
+initializeApp();
 
 app.use(
   cors({
@@ -55,6 +70,14 @@ const upload = multer({
 
     cb(null, true);
   },
+});
+
+app.get("/", (_req, res) => {
+  res.json({
+    ok: true,
+    service: "research-paper-backend",
+    routes: ["/api/health"],
+  });
 });
 
 app.get("/api/health", (_req, res) => {
@@ -236,17 +259,23 @@ app.post("/api/create-paper", async (req, res) => {
   }
 });
 
-async function startServer() {
-  initDatabase().catch((error) => {
-    console.warn("Database initialization failed, continuing without MongoDB.", error.message);
-  });
+app.use((error, _req, res, _next) => {
+  console.error("Unhandled request error:", error);
+  res.status(500).json({ detail: error.message || "Internal server error" });
+});
 
+async function startServer() {
+  initializeApp();
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Node backend running on http://localhost:${PORT}`);
   });
 }
 
-startServer().catch((error) => {
-  console.error("Server failed to start:", error);
-  process.exit(1);
-});
+module.exports = app;
+
+if (require.main === module) {
+  startServer().catch((error) => {
+    console.error("Server failed to start:", error);
+    process.exit(1);
+  });
+}

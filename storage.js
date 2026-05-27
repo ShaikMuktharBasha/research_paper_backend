@@ -1,7 +1,12 @@
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
-const ROOT_DIR = path.resolve(__dirname, "..");
+function isServerlessRuntime() {
+  return Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+}
+
+const ROOT_DIR = isServerlessRuntime() ? os.tmpdir() : __dirname;
 const UPLOAD_DIR = path.join(ROOT_DIR, "uploads");
 const DOCUMENT_STORE_DIR = path.join(ROOT_DIR, "chroma_db");
 
