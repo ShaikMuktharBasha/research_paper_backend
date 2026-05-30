@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
+const { getUsersCollection } = require("./database");
 const { ROOT_DIR } = require("./storage");
 
 const AUTH_DIR = path.join(ROOT_DIR, "auth_store");
@@ -54,17 +55,42 @@ function verifyPassword(password, storedHash) {
 
 function sanitizeUser(user) {
   return {
-    id: user.id,
+    id: String(user.id || user._id),
     name: user.name,
     email: user.email,
     created_at: user.created_at,
   };
 }
 
-function createUser({ name, email, password }) {
+async function createUser({ name, email, password }) {
   const trimmedName = String(name || "").trim();
   const normalizedEmail = normalizeEmail(email);
   const trimmedPassword = String(password || "");
+  const usersCollection = getUsersCollection();
+
+  if (usersCollection) {
+    const user = {
+      id: crypto.randomUUID(),
+      name: trimmedName,
+      email: normalizedEmail,
+      password_hash: hashPassword(trimmedPassword),
+      created_at: new Date().toISOString(),
+    };
+
+    try {
+      await usersCollection.insertOne(user);
+      return sanitizeUser(user);
+    } catch (error) {
+      if (error && error.code === 11000) {
+        const duplicateError = new Error("An account with that email already exists.");
+        duplicateError.code = "EMAIL_EXISTS";
+        throw duplicateError;
+      }
+
+      throw error;
+    }
+  }
+
   const users = readUsers();
 
   if (users.some((user) => user.email === normalizedEmail)) {
@@ -83,14 +109,20 @@ function createUser({ name, email, password }) {
 
   users.push(user);
   writeUsers(users);
-
   return sanitizeUser(user);
 }
 
-function authenticateUser(email, password) {
+async function authenticateUser(email, password) {
   const normalizedEmail = normalizeEmail(email);
-  const users = readUsers();
-  const user = users.find((entry) => entry.email === normalizedEmail);
+  const usersCollection = getUsersCollection();
+  let user = null;
+
+  if (usersCollection) {
+    user = await usersCollection.findOne({ email: normalizedEmail });
+  } else {
+    const users = readUsers();
+    user = users.find((entry) => entry.email === normalizedEmail);
+  }
 
   if (!user || !verifyPassword(String(password || ""), user.password_hash)) {
     const error = new Error("Incorrect email or password.");

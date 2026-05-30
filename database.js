@@ -1,5 +1,6 @@
 let client;
 let papersCollection = null;
+let usersCollection = null;
 let MongoClientClass = null;
 
 function getMongoClient() {
@@ -17,8 +18,8 @@ async function initDatabase() {
     return null;
   }
 
-  if (papersCollection) {
-    return papersCollection;
+  if (papersCollection && usersCollection) {
+    return { papersCollection, usersCollection };
   }
 
   try {
@@ -29,10 +30,13 @@ async function initDatabase() {
     await client.connect();
     const db = client.db("research_simplifier");
     papersCollection = db.collection("papers");
-    return papersCollection;
+    usersCollection = db.collection("users");
+    await usersCollection.createIndex({ email: 1 }, { unique: true });
+    return { papersCollection, usersCollection };
   } catch (error) {
     console.warn("MongoDB is unavailable, continuing without persistence.", error.message);
     papersCollection = null;
+    usersCollection = null;
     return null;
   }
 }
@@ -41,7 +45,12 @@ function getPapersCollection() {
   return papersCollection;
 }
 
+function getUsersCollection() {
+  return usersCollection;
+}
+
 module.exports = {
   getPapersCollection,
+  getUsersCollection,
   initDatabase,
 };

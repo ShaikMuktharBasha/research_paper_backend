@@ -83,7 +83,7 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-app.post("/api/auth/signup", (req, res) => {
+app.post("/api/auth/signup", async (req, res) => {
   const name = String(req.body.name || "").trim();
   const email = String(req.body.email || "").trim();
   const password = String(req.body.password || "");
@@ -104,7 +104,7 @@ app.post("/api/auth/signup", (req, res) => {
   }
 
   try {
-    const user = createUser({ name, email, password });
+    const user = await createUser({ name, email, password });
     res.status(201).json({ user });
   } catch (error) {
     if (error.code === "EMAIL_EXISTS") {
@@ -117,7 +117,7 @@ app.post("/api/auth/signup", (req, res) => {
   }
 });
 
-app.post("/api/auth/login", (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   const email = String(req.body.email || "").trim();
   const password = String(req.body.password || "");
 
@@ -127,7 +127,7 @@ app.post("/api/auth/login", (req, res) => {
   }
 
   try {
-    const user = authenticateUser(email, password);
+    const user = await authenticateUser(email, password);
     res.json({ user });
   } catch (error) {
     if (error.code === "INVALID_CREDENTIALS") {
