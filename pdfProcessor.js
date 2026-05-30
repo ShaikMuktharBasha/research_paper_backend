@@ -2,6 +2,15 @@ const fs = require("fs");
 
 let PDFParseClass = null;
 let CanvasFactoryClass = null;
+let workerData = null;
+
+function getWorkerData() {
+  if (!workerData) {
+    ({ getData: workerData } = require("pdf-parse/worker"));
+  }
+
+  return workerData;
+}
 
 function getCanvasFactory() {
   if (!CanvasFactoryClass) {
@@ -14,7 +23,9 @@ function getCanvasFactory() {
 function getPdfParse() {
   if (!PDFParseClass) {
     getCanvasFactory();
+    const getData = getWorkerData();
     ({ PDFParse: PDFParseClass } = require("pdf-parse"));
+    PDFParseClass.setWorker(getData());
   }
 
   return PDFParseClass;
