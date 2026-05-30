@@ -1,9 +1,19 @@
 const fs = require("fs");
 
 let PDFParseClass = null;
+let CanvasFactoryClass = null;
+
+function getCanvasFactory() {
+  if (!CanvasFactoryClass) {
+    ({ CanvasFactory: CanvasFactoryClass } = require("pdf-parse/worker"));
+  }
+
+  return CanvasFactoryClass;
+}
 
 function getPdfParse() {
   if (!PDFParseClass) {
+    getCanvasFactory();
     ({ PDFParse: PDFParseClass } = require("pdf-parse"));
   }
 
@@ -13,7 +23,8 @@ function getPdfParse() {
 async function extractTextAndStats(filePath) {
   const buffer = fs.readFileSync(filePath);
   const PDFParse = getPdfParse();
-  const parser = new PDFParse({ data: buffer });
+  const CanvasFactory = getCanvasFactory();
+  const parser = new PDFParse({ data: buffer, CanvasFactory });
 
   try {
     const pdfText = await parser.getText();
